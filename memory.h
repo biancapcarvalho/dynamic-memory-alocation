@@ -23,6 +23,10 @@ typedef struct MemorySegment {
     struct MemorySegment* next;     // ponteiro para o próximo segmento
 } MemorySegment;
 
+/**
+ * Função para inicializar a memória
+ * - Cria o primeiro segmento livre que representa toda a memória disponível
+ */
 void init_memory(void);
 
 /**
@@ -34,10 +38,28 @@ void init_memory(void);
  *  - Em caso de falha: -1
  *  - Em caso de sucesso: nº de nós atravessados na lista até encontrar um segmento
  */
-
 int alloc_mem(int PID, int mem_units);
 
-// visualizar o estado da memória
+/**
+ * Função para desalocar a memória de um processo
+ * Parâmetros:
+ *  - PID: O identificador do processo que irá liberar a memória
+ * Retorno:
+ *  - Em caso de falha: -1
+ *  - Em caso de sucesso: 1
+ */
+int dealloc_mem(int PID);
+
+/**
+ * Função para contar fragmentação externa
+ * Retorno:
+ *  - Quantidade de fragmentos externos de tamanho 1 ou 2 unidades
+ */
+int frag_count();
+
+/**
+ * Função para imprimir o estado atual da lista
+ */
 void print_memory_list(void);
 
 #endif

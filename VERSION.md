@@ -17,3 +17,14 @@
 - gerar requisiçoes de forma dinamica
 - criar 3 cenários de carga (25, 50 e 75%)
 - gerar relatório
+
+## v0.1.1 - Concluindo First Fit
+- Implementação do dealloc e frag_count do First-fit
+- Atualizaçao do README
+
+### Próximos Passos
+- Tornar operações de alocação atômicas
+- Implementar algoritmos adicionais de alocação (best-fit, worst-fit)
+- gerar requisiçoes de forma dinamica
+- criar 3 cenários de carga (25, 50 e 75%)
+- gerar relatório

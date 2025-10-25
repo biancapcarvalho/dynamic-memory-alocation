@@ -8,19 +8,11 @@ void print_memory_list(void);
 
 int main() {
     init_memory();
-    print_memory_list();
 
     FILE* file = fopen("requisitions.txt", "r");
 
     char line[100];
-    int pid, size;
-
-    // Pula o cabeçalho
-    if (fgets(line, sizeof(line), file) == NULL) {
-        fprintf(stderr, "Erro: Arquivo de requisições vazio ou inválido.\n");
-        fclose(file);
-        return 1;
-    }
+    int req, pid, size;
 
     // Le as requisições linha por linha
     while (fgets(line, sizeof(line), file)) {
@@ -28,20 +20,32 @@ int main() {
 
         char* token = strtok(line, ", ");
         if (token == NULL) continue;
-        pid = atoi(token);
+        req = token[0];
 
         token = strtok(NULL, ", ");
         if (token == NULL) continue;
-        size = atoi(token);
+        pid = atoi(token);
         
-        int nodes_traversed = alloc_mem(pid, size);
+        if (req == 'A')
+        {
+            token = strtok(NULL, ", ");
+            if (token == NULL) continue;
+            size = atoi(token);
+
+            alloc_mem(pid, size);
+        }
+        else if (req == 'D')
+        {
+            dealloc_mem(pid);
+        }
         
         print_memory_list();
     }
 
     fclose(file);
-    printf("Simulação concluída.\n");
     print_memory_list();
+
+    frag_count();
 
     return 0;
 }

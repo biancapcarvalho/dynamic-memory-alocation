@@ -21,17 +21,13 @@
  * busca possível. 
  */
 
-// A cabeça da lista encadeada de blocos livres.
-static MemorySegment* memory_list_head = NULL;
+// início da lista
+ static MemorySegment* memory_list_head = NULL;
 
-/**
- * Inicializar a memória
- */
 void init_memory(void) {
-    // Criar o primeiro bloco livre (que é a memória toda)
     memory_list_head = (MemorySegment*)malloc(sizeof(MemorySegment));
     if (memory_list_head == NULL) {
-        fprintf(stderr, "Erro fatal: Falha ao alocar nó inicial da memória\n");
+        fprintf(stderr, "Erro: Falha ao inicializar a memória\n");
         exit(1);
     }
 
@@ -41,18 +37,16 @@ void init_memory(void) {
     memory_list_head->next = NULL;
     memory_list_head->prev = NULL;
 
-    printf("Memória inicializada (1 segmento de %d unidades).\n", TOTAL_MEMORY_UNITS);
+    printf("Memória inicializada.\n");
+    print_memory_list();
 }
 
-/**
- * Funçao para alocar a memória
- */
 int alloc_mem(int PID, int mem_units) {
-    printf("> Nova requisiçao: processo %d requer %d unidades de memória.\n", PID, mem_units);
+    printf("\n> Nova requisiçao: processo %d requer %d unidades de memória.\n", PID, mem_units);
 
     // Verificar se ja tem memória alocada para o processo
     if (is_process_allocated(PID) == TRUE) {
-        printf("FALHA AO ALOCAR MEMORIA - Já existe memória alocada para o processo PID %d.\n", PID);
+        printf("  FALHA AO ALOCAR MEMÓRIA - Já existe memória alocada para o processo PID %d.\n", PID);
         return -1;
     }
 
@@ -73,11 +67,9 @@ int alloc_mem(int PID, int mem_units) {
     }
 
     if (suitable_segment == NULL) {
-        printf("FALHA AO ALOCAR MEMÓRIA - Sem espaço suficiente.\n");
+        printf("  FALHA AO ALOCAR MEMÓRIA - Sem espaço suficiente.\n");
         return -1; 
     }
-
-    // ver forma de transformar a alocaçao de memoria e a inserçao na lista de processos alocados em uma funçao atomica
 
     /**
      * Para alocar a memória devemos:
@@ -104,17 +96,78 @@ int alloc_mem(int PID, int mem_units) {
         suitable_segment->next = new_free_segment;
     }
 
-    printf("Memória alocada com sucesso para o processo %d (%d unidades).\n", PID, mem_units);
+    printf("  Memória alocada com sucesso para o processo %d (%d unidades).\n", PID, mem_units);
     add_allocated_process(PID);
 
     return nodes_traversed;
 }
 
-/**
- * Função para imprimir o estado atual da lista de memória
- */
+int dealloc_mem(int PID) {
+    printf("\n> Requisição de desalocação: processo %d.\n", PID);
+
+    MemorySegment* current = memory_list_head;
+
+    // Percorre a lista para encontrar o segmento alocado ao PID
+    while (current != NULL) {
+        if (current->PID == PID) {
+            // Desalocar o segmento
+            current->PID = -1;
+
+            /**
+             * Sao quatro cenários possiveis apos a desalocação:
+             * 1. O segmento anterior e o próximo estão alocados -> não faz nada
+             * 2. O segmento anterior está livre -> funde com o anterior
+             * 3. O próximo segmento está livre -> funde com o próximo
+             * 4. Ambos os segmentos estão livres -> funde com ambos
+             */
+
+            // Verifica se pode fundir com o segmento anterior
+            if (current->prev != NULL && current->prev->PID == -1) {
+                current->prev->size += current->size;
+                current->prev->next = current->next;
+                if (current->next != NULL) {
+                    current->next->prev = current->prev;
+                }
+                current = current->prev;
+            }
+
+            // Verifica se pode fundir com o próximo segmento
+            if (current->next != NULL && current->next->PID == -1) {
+                MemorySegment* next_segment = current->next;
+                current->size += next_segment->size;
+                current->next = next_segment->next;
+                if (next_segment->next != NULL) {
+                    next_segment->next->prev = current;
+                }
+            }
+
+            printf("  Memória desalocada com sucesso para o processo %d.\n", PID);
+            return 1;
+        }
+        current = current->next;
+    }
+
+    printf("  FALHA AO DESALOCAR MEMÓRIA - Processo %d não encontrado.\n", PID);
+    return -1;
+}
+
+int frag_count() {
+    int frag_count = 0;
+    MemorySegment* current = memory_list_head;
+
+    while (current != NULL) {
+        if (current->PID == -1 && (current->size == 1 || current->size == 2)) {
+            frag_count++;
+        }
+        current = current->next;
+    }
+
+    printf("\n> Contagem de fragmentação externa: %d.\n", frag_count);
+    return frag_count;
+}
+
 void print_memory_list(void) {
-    printf("--- Status da Memória ---\n");
+    printf("\n> Status da Memória\n");
     MemorySegment* current = memory_list_head;
     int i = 0;
     while (current != NULL) {
