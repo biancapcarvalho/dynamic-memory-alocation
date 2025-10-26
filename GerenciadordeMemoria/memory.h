@@ -1,7 +1,7 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include "config.h"
+#include "../config.h"
 
 /**
  * TRECHO DO LIVRO

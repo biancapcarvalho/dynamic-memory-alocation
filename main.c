@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "memory.h"
+#include "GerenciadordeMemoria/memory.h"
 #include "config.h"
 
 void print_memory_list(void);
@@ -9,7 +9,7 @@ void print_memory_list(void);
 int main() {
     init_memory();
 
-    FILE* file = fopen("requisitions.txt", "r");
+    FILE* file = fopen("GeradordeRequisicoes/requisitions.txt", "r");
 
     char line[100];
     int req, pid, size;

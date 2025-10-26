@@ -1,7 +1,7 @@
 #ifndef ALLOCATED_PROCESSES_H
 #define ALLOCATED_PROCESSES_H
 
-#include "config.h"
+#include "../config.h"
 
 /**
  * Implementação de uma lista encadeada para rastrear os processos que têm memória alocada

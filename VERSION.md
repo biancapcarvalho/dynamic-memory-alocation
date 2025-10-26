@@ -18,9 +18,12 @@
 - Correçao na funçao dealloc_mem do first-fit
 - Atualizaçao do README
 
+## v0.3.0 - Implementaçao do best fit
+- Implementação do alloc_mem, dealloc_mem e frag_count do best-fit
+- Atualizaçao do README
+
 ### Próximos Passos
 - Tornar operações de alocação atômicas
-- Implementar algoritmo de alocação best-fit
 - gerar requisiçoes de forma dinamica
 - criar 3 cenários de carga (25, 50 e 75%)
 - gerar relatório
