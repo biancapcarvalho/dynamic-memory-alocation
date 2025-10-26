@@ -43,8 +43,6 @@ int main() {
     }
 
     fclose(file);
-    print_memory_list();
-
     frag_count();
 
     return 0;

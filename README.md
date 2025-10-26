@@ -17,7 +17,8 @@ As especificações do sistema implementado são:
 
 A versão atual do projeto inclui:
 * **`config.h`**: Definição das características do sistema (tamanhos de memória, processos, etc.).
-* **`first_fit.c`**: Implementação inicial do algoritmo *First Fit*, incluindo a inicialização da memória e as funçoes `alloc_mem`, `dealloc_mem` e `frag_count`.
+* **`first_fit.c`**: Implementação do algoritmo *First Fit*, incluindo a inicialização da memória e as funçoes `alloc_mem`, `dealloc_mem` e `frag_count`.
+* **`first_fit.c`**: Implementação do algoritmo *Next Fit*, incluindo a inicialização da memória e as funçoes `alloc_mem`, `dealloc_mem` e `frag_count`.
 * **`allocated_processes.c`**: Uma lista encadeada auxiliar para rastrear processos que já possuem memória alocada, com funções para adicionar e buscar PIDs.
 * **`main.c`**: O programa principal que inicializa a memória e processa um arquivo estático (`requisitions.txt`) de requisições de alocação.
 
@@ -38,7 +39,7 @@ A versão atual do projeto inclui:
     * Baixa Carga (25%)
     * Média Carga (50%)
     * Alta Carga (75%)
-    * A carga é definida pela probabilidade de uma requisição ser para alocar memória (ex: carga baixa = 50% alocar, 50% desalocar).
+    * A carga é definida pela probabilidade de uma requisição ser para alocar memória
 
 ### 3. Relatório e Análise
 
@@ -53,8 +54,16 @@ A versão atual do projeto inclui:
 ## Como Compilar e Executar
 
 ```bash
+## FIRST FIT
 # Compilar o programa
-gcc main.c first_fit.c allocated_processes.c -o simulator
+gcc main.c allocated_processes.c first_fit.c -o first_fit
 
 # Executar a simulação
-./simulator
+./first_fit
+
+## NEXT FIT
+# Compilar o programa
+gcc main.c allocated_processes.c next_fit.c -o next_fit
+
+# Executar a simulação
+./next_fit

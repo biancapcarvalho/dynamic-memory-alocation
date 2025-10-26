@@ -18,6 +18,11 @@ typedef struct AllocatedProcess {
 void add_allocated_process(int PID);
 
 /**
+ * Funçao para remover um processo da lista de processos alocados
+ */
+void remove_allocated_process(int PID);
+
+/**
  * Funçao para verificar se um processo está na lista de processos alocados
  */
 bool is_process_allocated(int PID);

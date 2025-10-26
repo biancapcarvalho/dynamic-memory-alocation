@@ -9,22 +9,18 @@
     - Funçoes adicionar e buscar
 - (requisitions.txt) Arquivo com as requisiçoes
 
-### Próximos Passos
-- Implementar função de desalocação de memória
-- Adicionar medição de fragmentação externa
-- Tornar operações de alocação atômicas
-- Implementar algoritmos adicionais de alocação (best-fit, worst-fit)
-- gerar requisiçoes de forma dinamica
-- criar 3 cenários de carga (25, 50 e 75%)
-- gerar relatório
-
 ## v0.1.1 - Concluindo First Fit
-- Implementação do dealloc e frag_count do First-fit
+- Implementação do dealloc_mem e frag_count do First-fit
+- Atualizaçao do README
+
+## v0.2.0 - Implementaçao do next fit
+- Implementação do alloc_mem, dealloc_mem e frag_count do next-fit
+- Correçao na funçao dealloc_mem do first-fit
 - Atualizaçao do README
 
 ### Próximos Passos
 - Tornar operações de alocação atômicas
-- Implementar algoritmos adicionais de alocação (best-fit, worst-fit)
+- Implementar algoritmo de alocação best-fit
 - gerar requisiçoes de forma dinamica
 - criar 3 cenários de carga (25, 50 e 75%)
 - gerar relatório

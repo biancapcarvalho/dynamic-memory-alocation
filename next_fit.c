@@ -4,17 +4,20 @@
 #include <stdlib.h>
 
 /**
- * TRECHO DO LIVRO 
- * O algoritmo mais simples é first fit (primeiro encaixe). O gerenciador de memória
- * examina a lista de segmentos até encontrar um espaço livre que seja grande o
- * suficiente. O espaço livre é então dividido em duas partes, uma para o processo e
- * outra para a memória não utilizada, exceto no caso estatisticamente improvável de
- * um encaixe exato. First fit é um algoritmo rápido, pois ele procura fazer a menor
- * busca possível. 
+ * TRECHO DO LIVRO
+ * Uma pequena variação do first fit é o next fit. Ele funciona da mesma maneira que
+ * o first fit, exceto por memorizar a posição que se encontra um espaço livre
+ * adequado sempre que o encontra. Da vez seguinte que for chamado para encontrar um
+ * espaço livre, ele começa procurando na lista do ponto onde havia parado, em vez
+ * de sempre do princípio, como faz o first fit. Simulações realizadas por Bays
+ * (1977) mostram que o next fit tem um desempenho ligeiramente pior do que o do
+ * first fit.
  */
 
 // início da lista
 static MemorySegment* memory_list_head = NULL;
+// nó onde a próxima busca deve começar
+static MemorySegment* next_fit_pointer = NULL;
 
 void init_memory(void) {
     memory_list_head = (MemorySegment*)malloc(sizeof(MemorySegment));
@@ -31,6 +34,8 @@ void init_memory(void) {
 
     printf("Memória inicializada.\n");
     print_memory_list();
+
+    next_fit_pointer = memory_list_head;
 }
 
 int alloc_mem(int PID, int mem_units) {
@@ -44,9 +49,10 @@ int alloc_mem(int PID, int mem_units) {
 
     int nodes_traversed = 0;
     MemorySegment* suitable_segment = NULL;
-    MemorySegment* current = memory_list_head;
+    MemorySegment* current = next_fit_pointer;
 
-    // Percorre a lista e para no primeiro segmento livre com tamanho suficiente
+    // É uma lista circular. Começa a percorrer no nó após o último alocado,
+    // e vai até encontrar um segmento adequado ou voltar ao início
     while (current != NULL) {
         nodes_traversed++;
         
@@ -57,6 +63,22 @@ int alloc_mem(int PID, int mem_units) {
         
         current = current->next;
     }
+
+    if (suitable_segment == NULL)
+    {
+        current = memory_list_head;
+        while (current != next_fit_pointer) {
+            nodes_traversed++;
+            
+            if (current->PID == -1 && current->size >= mem_units) {
+                suitable_segment = current;
+                break;
+            }
+            
+            current = current->next;
+        }
+    }
+    
 
     if (suitable_segment == NULL) {
         // Aqui devo desalocar algum processo ou retornar falha?
@@ -70,6 +92,7 @@ int alloc_mem(int PID, int mem_units) {
      *  - Se o segmento for maior que o requisitado:
      *    - Redefinir o tamanho do segmento
      *    - Criar um novo segmento livre com o tamanho restante, que será o "next" do alocado
+     *  - Salvar o nó onde parou a busca para a próxima alocação
      */
     int remainder_size = suitable_segment->size - mem_units; // tamanho do segmento encontrado - tamanho requisitado
 
@@ -87,14 +110,14 @@ int alloc_mem(int PID, int mem_units) {
         suitable_segment->PID = PID;
         suitable_segment->size = mem_units;
         suitable_segment->next = new_free_segment;
-
-        if (new_free_segment->next != NULL) {
-            new_free_segment->next->prev = new_free_segment;
-        }
     }
 
     printf("  Memória alocada com sucesso para o processo %d (%d unidades).\n", PID, mem_units);
     add_allocated_process(PID);
+
+    // Se o segmento alocado tiver um próximo, começamos a próxima busca por ele
+    // Se não, voltamos ao início da lista.
+    next_fit_pointer = suitable_segment->next != NULL ? suitable_segment->next : memory_list_head;
 
     return nodes_traversed;
 }
