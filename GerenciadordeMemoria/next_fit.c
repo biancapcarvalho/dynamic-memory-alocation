@@ -105,11 +105,13 @@ int alloc_mem(int PID, int mem_units) {
     if (remainder_size == 0)
     {
         suitable_segment->PID = PID;
+        suitable_segment->frag_size = (pages_needed * PAGE_SIZE) - required_mem_kb;
     } else {
         MemorySegment* new_free_segment = (MemorySegment*)malloc(sizeof(MemorySegment));
         new_free_segment->PID = -1;
         new_free_segment->start_unit = suitable_segment->start_unit + pages_needed;
         new_free_segment->size = remainder_size;
+        new_free_segment->frag_size = 0;
         new_free_segment->prev = suitable_segment;
         new_free_segment->next = suitable_segment->next;
 
