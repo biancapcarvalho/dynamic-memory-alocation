@@ -18,7 +18,8 @@
 typedef struct MemorySegment {
     int PID;                        // PID do processo alocado (ou -1 se for um espaço livre)
     int start_unit;                 // unidade inicial do segmento
-    int size;                       // tamanho do segmento em unidades (KB)
+    int size;                       // tamanho do segmento em unidades de 4 KB
+    int frag_size;                  // tamanho da fragmentação interna (em KB)
     struct MemorySegment* prev;     // ponteiro para o segmento anterior
     struct MemorySegment* next;     // ponteiro para o próximo segmento
 } MemorySegment;

@@ -8,14 +8,13 @@ O objetivo principal é desenvolver um sistema para compreender o gerenciamento 
 
 As especificações do sistema implementado são:
 * **Memória Total:** 1 MB
-* **Unidade de Alocação:** 4 KB
-* **Total de Unidades de Memória:** 256 (calculado como 1 MB / 4 KB)
+* **Tamanho da Página:** 4 KB
+* **Total de Páginas:** 256
+* **Unidade de Memória**: 1 KB
 * **Tamanho do Processo:** Varia de 3 a 15 unidades de memória
 * **PID:** Um número de 0 a 9.999
 
-## Versão Atual (v0.3.0)
-
-A versão atual do projeto inclui:
+## Versão Atual (v0.3.1)
 
 ### 1. Básicos do Sistema
 

@@ -22,7 +22,14 @@
 - Implementação do alloc_mem, dealloc_mem e frag_count do best-fit
 - Atualizaçao do README
 
+## v0.3.1 - Correçao da Alocaçao
+- Correçao da alocaçao -> Implementação de alocaçao por paginas
+- Alteraçao na struct da memória -> indicar KB de fragmentaçao
+- Alteraçao no print_memory_list -> exibir a fragmentaçao
+- Atualizaçao do README
+
 ### Próximos Passos
+- Correçao do frag_count em todos os algoritmos
 - Tornar operações de alocação atômicas
 - gerar requisiçoes de forma dinamica
 - criar 3 cenários de carga (25, 50 e 75%)

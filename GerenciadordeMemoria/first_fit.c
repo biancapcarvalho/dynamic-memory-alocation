@@ -25,7 +25,8 @@ void init_memory(void) {
 
     memory_list_head->PID = -1;
     memory_list_head->start_unit = 0;
-    memory_list_head->size = TOTAL_MEMORY_UNITS;
+    memory_list_head->size = TOTAL_PAGES;
+    memory_list_head->frag_size = 0;
     memory_list_head->next = NULL;
     memory_list_head->prev = NULL;
 
@@ -42,6 +43,11 @@ int alloc_mem(int PID, int mem_units) {
         return -1;
     }
 
+    int required_mem_kb = mem_units * MEM_UNIT_SIZE;
+    int pages_needed = (required_mem_kb + PAGE_SIZE - 1) / PAGE_SIZE; // força o arredondamento para cima
+
+    printf("\n  Procurando por %d paginas livres e consecutivas para alocar...\n", pages_needed);
+
     int nodes_traversed = 0;
     MemorySegment* suitable_segment = NULL;
     MemorySegment* current = memory_list_head;
@@ -50,7 +56,7 @@ int alloc_mem(int PID, int mem_units) {
     while (current != NULL) {
         nodes_traversed++;
         
-        if (current->PID == -1 && current->size >= mem_units) {
+        if (current->PID == -1 && current->size >= pages_needed) {
             suitable_segment = current;
             break;
         }
@@ -71,7 +77,7 @@ int alloc_mem(int PID, int mem_units) {
      *    - Redefinir o tamanho do segmento
      *    - Criar um novo segmento livre com o tamanho restante, que será o "next" do alocado
      */
-    int remainder_size = suitable_segment->size - mem_units; // tamanho do segmento encontrado - tamanho requisitado
+    int remainder_size = suitable_segment->size - pages_needed; // tamanho do segmento encontrado - tamanho requisitado
 
     if (remainder_size == 0)
     {
@@ -79,13 +85,14 @@ int alloc_mem(int PID, int mem_units) {
     } else {
         MemorySegment* new_free_segment = (MemorySegment*)malloc(sizeof(MemorySegment));
         new_free_segment->PID = -1;
-        new_free_segment->start_unit = suitable_segment->start_unit + mem_units;
+        new_free_segment->start_unit = suitable_segment->start_unit + pages_needed;
         new_free_segment->size = remainder_size;
         new_free_segment->prev = suitable_segment;
         new_free_segment->next = suitable_segment->next;
 
         suitable_segment->PID = PID;
-        suitable_segment->size = mem_units;
+        suitable_segment->size = pages_needed;
+        suitable_segment->frag_size = (pages_needed * PAGE_SIZE) - required_mem_kb;
         suitable_segment->next = new_free_segment;
 
         if (new_free_segment->next != NULL) {
@@ -93,7 +100,7 @@ int alloc_mem(int PID, int mem_units) {
         }
     }
 
-    printf("  Memória alocada com sucesso para o processo %d (%d unidades).\n", PID, mem_units);
+    printf("  Memória alocada com sucesso para o processo %d (%d unidades em %d paginas).\n", PID, mem_units, pages_needed);
     add_allocated_process(PID);
 
     return nodes_traversed;
@@ -108,6 +115,7 @@ int dealloc_mem(int PID) {
     while (current != NULL) {
         if (current->PID == PID) {
             current->PID = -1;
+            current->frag_size = 0;
 
             /**
              * Sobre os vizinhos, sao quatro cenários possiveis apos a desalocação:
@@ -151,6 +159,7 @@ int dealloc_mem(int PID) {
     return -1;
 }
 
+// CORRIGIR - DEVE CONTAR A FRAGMENTAÇÃO EXTERNA OU INTERNA?
 int frag_count() {
     int frag_count = 0;
     MemorySegment* current = memory_list_head;
@@ -177,7 +186,7 @@ void print_memory_list(void) {
         } else {
             printf("[ PID %d ] ", current->PID);
         }
-        printf("Início: %d, Tamanho: %d unidades\n", current->start_unit, current->size);
+        printf("Início: %d, Tamanho: %d paginas, Fragmentação interna: %d KB\n", current->start_unit, current->size, current->frag_size);
         current = current->next;
     }
     printf("\n\n");
