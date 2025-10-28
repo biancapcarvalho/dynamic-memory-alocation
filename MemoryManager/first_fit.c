@@ -4,13 +4,13 @@
 #include <stdlib.h>
 
 /**
- * TRECHO DO LIVRO
- * Outro algoritmo bem conhecido e amplamente usado é o best fit. O best fit faz uma
- * busca em toda a lista do início ao fim, e escolhe o menor espaço livre que seja
- * adequado. Em vez de escolher um espaço livre grande demais que talvez seja
- * necessário mais tarde, o best fit tenta encontrar um que seja de um tamanho
- * próximo do tamanho real necessário, para casar da melhor maneira possível a
- * solicitação com os segmentos disponíveis.
+ * TRECHO DO LIVRO 
+ * O algoritmo mais simples é first fit (primeiro encaixe). O gerenciador de memória
+ * examina a lista de segmentos até encontrar um espaço livre que seja grande o su-
+ * ficiente. O espaço livre é então dividido em duas partes, uma para o processo e
+ * outra para a memória não utilizada, exceto no caso estatisticamente improvável de
+ * um encaixe exato. First fit é um algoritmo rápido, pois ele procura fazer a menor
+ * busca possível. 
  */
 
 // início da lista
@@ -46,21 +46,21 @@ int alloc_mem(int PID, int mem_units) {
     int required_mem_kb = mem_units * MEM_UNIT_SIZE;
     int pages_needed = (required_mem_kb + PAGE_SIZE - 1) / PAGE_SIZE; // força o arredondamento para cima
 
-    printf("\n  Procurando por %d paginas livres e consecutivas para alocar...\n", pages_needed);
+    printf("\n  Procurando por um segmento de %d paginas livres para alocar...\n", pages_needed);
 
     int nodes_traversed = 0;
     MemorySegment* suitable_segment = NULL;
     MemorySegment* current = memory_list_head;
 
-    // Percorre toda a lista atualizando o segmento livre mais adequado
-    int smallest_size_found = TOTAL_PAGES + 1; // inicializa com um valor maior que o total de memória
+    // Percorre a lista e para no primeiro segmento livre com tamanho suficiente
     while (current != NULL) {
         nodes_traversed++;
         
-        if (current->PID == -1 && current->size >= pages_needed && current->size < smallest_size_found) {
+        if (current->PID == -1 && current->size >= pages_needed) {
             suitable_segment = current;
-            smallest_size_found = current->size;
+            break;
         }
+        
         current = current->next;
     }
 
@@ -74,26 +74,27 @@ int alloc_mem(int PID, int mem_units) {
      * Para alocar a memória devemos:
      *  - Atualizar o segmento encontrado com o PID
      *  - Se o segmento for maior que o requisitado:
-     *    - Redefinir o tamanho do segmento
      *    - Criar um novo segmento livre com o tamanho restante, que será o "next" do alocado
      */
     int remainder_size = suitable_segment->size - pages_needed; // tamanho do segmento encontrado - tamanho requisitado
+    int frag_size_kb = (pages_needed * PAGE_SIZE) - required_mem_kb;
 
     if (remainder_size == 0)
     {
         suitable_segment->PID = PID;
-        suitable_segment->frag_size = (pages_needed * PAGE_SIZE) - required_mem_kb;
+        suitable_segment->frag_size = frag_size_kb;
     } else {
         MemorySegment* new_free_segment = (MemorySegment*)malloc(sizeof(MemorySegment));
         new_free_segment->PID = -1;
         new_free_segment->start_unit = suitable_segment->start_unit + pages_needed;
         new_free_segment->size = remainder_size;
+        new_free_segment->frag_size = 0;
         new_free_segment->prev = suitable_segment;
         new_free_segment->next = suitable_segment->next;
 
         suitable_segment->PID = PID;
         suitable_segment->size = pages_needed;
-        suitable_segment->frag_size = (pages_needed * PAGE_SIZE) - required_mem_kb;
+        suitable_segment->frag_size = frag_size_kb;
         suitable_segment->next = new_free_segment;
 
         if (new_free_segment->next != NULL) {
@@ -166,13 +167,13 @@ int frag_count() {
     MemorySegment* current = memory_list_head;
 
     while (current != NULL) {
-        if (current->PID == -1 && (current->size == 1 || current->size == 2)) {
+        if (current->frag_size == 1 || current->frag_size == 2) {
             frag_count++;
         }
         current = current->next;
     }
 
-    printf("\n> Contagem de fragmentação externa: %d.\n", frag_count);
+    printf("\n> Contagem de fragmentação interna: %d.\n", frag_count);
     return frag_count;
 }
 

@@ -34,6 +34,11 @@
  */
 #define MAX_PID 9999
 
+/**
+ * Número de requisições a serem geradas
+ */
+#define NUM_REQUESTS 10000
+
 #define TRUE 1
 #define FALSE 0
 typedef int bool;

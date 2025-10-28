@@ -190,13 +190,13 @@ int frag_count() {
     MemorySegment* current = memory_list_head;
 
     while (current != NULL) {
-        if (current->PID == -1 && (current->size == 1 || current->size == 2)) {
+        if (current->frag_size == 1 || current->frag_size == 2) {
             frag_count++;
         }
         current = current->next;
     }
 
-    printf("\n> Contagem de fragmentação externa: %d.\n", frag_count);
+    printf("\n> Contagem de fragmentação interna: %d.\n", frag_count);
     return frag_count;
 }
 

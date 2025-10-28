@@ -4,13 +4,13 @@
 #include <stdlib.h>
 
 /**
- * TRECHO DO LIVRO 
- * O algoritmo mais simples é first fit (primeiro encaixe). O gerenciador de memória
- * examina a lista de segmentos até encontrar um espaço livre que seja grande o
- * suficiente. O espaço livre é então dividido em duas partes, uma para o processo e
- * outra para a memória não utilizada, exceto no caso estatisticamente improvável de
- * um encaixe exato. First fit é um algoritmo rápido, pois ele procura fazer a menor
- * busca possível. 
+ * TRECHO DO LIVRO
+ * Outro algoritmo bem conhecido e amplamente usado é o best fit. O best fit faz uma
+ * busca em toda a lista do início ao fim, e escolhe o menor espaço livre que seja
+ * adequado. Em vez de escolher um espaço livre grande demais que talvez seja
+ * necessário mais tarde, o best fit tenta encontrar um que seja de um tamanho
+ * próximo do tamanho real necessário, para casar da melhor maneira possível a
+ * solicitação com os segmentos disponíveis.
  */
 
 // início da lista
@@ -52,15 +52,15 @@ int alloc_mem(int PID, int mem_units) {
     MemorySegment* suitable_segment = NULL;
     MemorySegment* current = memory_list_head;
 
-    // Percorre a lista e para no primeiro segmento livre com tamanho suficiente
+    // Percorre toda a lista atualizando o segmento livre mais adequado
+    int smallest_size_found = TOTAL_PAGES + 1; // inicializa com um valor maior que o total de memória
     while (current != NULL) {
         nodes_traversed++;
         
-        if (current->PID == -1 && current->size >= pages_needed) {
+        if (current->PID == -1 && current->size >= pages_needed && current->size < smallest_size_found) {
             suitable_segment = current;
-            break;
+            smallest_size_found = current->size;
         }
-        
         current = current->next;
     }
 
@@ -88,7 +88,6 @@ int alloc_mem(int PID, int mem_units) {
         new_free_segment->PID = -1;
         new_free_segment->start_unit = suitable_segment->start_unit + pages_needed;
         new_free_segment->size = remainder_size;
-        new_free_segment->frag_size = 0;
         new_free_segment->prev = suitable_segment;
         new_free_segment->next = suitable_segment->next;
 
@@ -167,13 +166,13 @@ int frag_count() {
     MemorySegment* current = memory_list_head;
 
     while (current != NULL) {
-        if (current->PID == -1 && (current->size == 1 || current->size == 2)) {
+        if (current->frag_size == 1 || current->frag_size == 2) {
             frag_count++;
         }
         current = current->next;
     }
 
-    printf("\n> Contagem de fragmentação externa: %d.\n", frag_count);
+    printf("\n> Contagem de fragmentação interna: %d.\n", frag_count);
     return frag_count;
 }
 

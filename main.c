@@ -1,49 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "GerenciadordeMemoria/memory.h"
 #include "config.h"
+#include "MemoryManager/memory.h"
+#include "RequestGenerator/request_generator.h"
 
 void print_memory_list(void);
 
 int main() {
     init_memory();
 
-    FILE* file = fopen("GeradordeRequisicoes/requisitions.txt", "r");
+    Request* requests = generate_requests();
 
-    char line[100];
-    int req, pid, size;
-
-    // Le as requisições linha por linha
-    while (fgets(line, sizeof(line), file)) {
-        if (strlen(line) <= 1) continue;
-
-        char* token = strtok(line, ", ");
-        if (token == NULL) continue;
-        req = token[0];
-
-        token = strtok(NULL, ", ");
-        if (token == NULL) continue;
-        pid = atoi(token);
-        
-        if (req == 'A')
-        {
-            token = strtok(NULL, ", ");
-            if (token == NULL) continue;
-            size = atoi(token);
-
-            alloc_mem(pid, size);
+    for (int i = 0; i < NUM_REQUESTS; i++) {
+        if (requests[i].type == 'A') {
+            alloc_mem(requests[i].pid, requests[i].size);
+        } else if (requests[i].type == 'D') {
+            dealloc_mem(requests[i].pid);
         }
-        else if (req == 'D')
-        {
-            dealloc_mem(pid);
-        }
-        
+
         print_memory_list();
     }
 
-    fclose(file);
-    frag_count();
+    free(requests);
+    
+    printf("\n> Contagem final de fragmentação interna: %d\n", frag_count());
 
     return 0;
 }

@@ -28,9 +28,14 @@
 - Alteraçao no print_memory_list -> exibir a fragmentaçao
 - Atualizaçao do README
 
+## v0.4.0 - Implementação inicial do gerador de requisições
+- Arquivos renomeados e reorganizados em diretórios
+- (config.h) Definido número de requisições a serem gerados
+- (request_generator) Implementação do gerador de requisições aleatórias
+- (main.c) Alterado para processar um array de requisições, não mais um arquivo
+- (first_fit.c, best_fit.c e next_fit.c) Implementada função de contagem de fragmentos internos
+- Atualizaçao do README
+
 ### Próximos Passos
-- Correçao do frag_count em todos os algoritmos
-- Tornar operações de alocação atômicas
-- gerar requisiçoes de forma dinamica
-- criar 3 cenários de carga (25, 50 e 75%)
-- gerar relatório
+- Alterar o gerador de requisições para refletir os 3 cenários de carga (25, 50 e 75%)
+- Fazer o componente de relatório
