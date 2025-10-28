@@ -2,39 +2,42 @@
 #define CONFIG_H
 
 /*
-!!!! VERIFICAR COM O PROF SE A UNIDADE DE MEMÓRIA É DE 1 OU 4 KB !!!!
  *
  * Especificaçoes de memória
  * 
  *  - Tamanho: 1 MB
- *  - Unidade de memória: 4 KB
+ *  - Unidade de alocação/Página: 4 KB
  * 
  * Especificaçoes de processo
  * 
  *  - Tamanho: de 3 a 15 unidades de memória
+ *  - Unidades de memória: 1 KB
  *  - PID: de 0 a 9999
  */
 
 /**
- * Quantidade de unidades de memória
+ * Quantidade de páginas
  * 1 MB / 4 KB = 2^20 / 2^12 = 2^8 = 256
  */
-#define TOTAL_MEMORY_UNITS 256
+#define TOTAL_PAGES 256
+#define PAGE_SIZE 4 // KB
 
 /**
- * Tamanho mínimo de um processo/requisição
+ * Tamanhos mínimo e máximo de um processo/requisição
  */
 #define MIN_REQUEST_SIZE 3
-
-/**
- * Tamanho máximo de um processo/requisição
- */
 #define MAX_REQUEST_SIZE 15
+#define MEM_UNIT_SIZE 1 // KB
 
 /**
  * Valor máximo para o PID
  */
 #define MAX_PID 9999
+
+/**
+ * Número de requisições a serem geradas
+ */
+#define NUM_REQUESTS 10000
 
 #define TRUE 1
 #define FALSE 0

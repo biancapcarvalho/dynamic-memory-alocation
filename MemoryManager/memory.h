@@ -17,10 +17,11 @@
 
 typedef struct MemorySegment {
     int PID;                        // PID do processo alocado (ou -1 se for um espaço livre)
-    int start_unit;                 // unidade inicial do segmento
-    int size;                       // tamanho do segmento em unidades (KB)
-    struct MemorySegment* prev;     // ponteiro para o segmento anterior
-    struct MemorySegment* next;     // ponteiro para o próximo segmento
+    int start_unit;                 // unidade inicial do segmento de páginas
+    int size;                       // quantidade de páginas
+    int frag_size;                  // tamanho da fragmentação interna (em KB)
+    struct MemorySegment* prev;     // ponteiro para o segmento de páginas anterior
+    struct MemorySegment* next;     // ponteiro para o próximo segmento de páginas
 } MemorySegment;
 
 /**
@@ -54,6 +55,11 @@ int dealloc_mem(int PID);
  * Função para contar fragmentação externa
  * Retorno:
  *  - Quantidade de fragmentos externos de tamanho 1 ou 2 unidades
+ * 
+ * TRECHO DO LIVRO
+ * Um segmento de código, dados, ou pilha escolhido ao acaso não ocupará um número inteiro de
+ * páginas. Na média, metade da página final estará vazia. O espaço extra nessa página é des-
+ * perdiçado. Esse desperdício é chamado de fragmentação interna.
  */
 int frag_count();
 
