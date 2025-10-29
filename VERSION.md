@@ -36,6 +36,19 @@
 - (first_fit.c, best_fit.c e next_fit.c) Implementada função de contagem de fragmentos internos
 - Atualizaçao do README
 
+## v0.4.1 - 
+- (config.h) Inclusão de <stdbool.h> para variáveis booleanas
+- (main.c)
+    - Inserção da chamada srand() antes de chamar o gerador de requisições, para ser chamada uma única vez
+    - Chamada print_memory_list() fora do loop, somente ao final do processamento de todas as requisições
+- (allocated_processes.c)
+    - Remoção dos printf
+    - Nova função: get_random_allocated_pid() para não gerar requisições de desalocação de processos não alocados
+- (request_generator.c)
+    - Remoção do srand() (foi para main.c)
+    - Correção do rand() para escolher o tipo de requisição
+    - Alteração na desalocação para não gerar requisição de processo não alocado
+
 ### Próximos Passos
 - Alterar o gerador de requisições para refletir os 3 cenários de carga (25, 50 e 75%)
 - Fazer o componente de relatório

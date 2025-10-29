@@ -1,6 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <stdbool.h>
+
 /*
  *
  * Especificaçoes de memória
@@ -38,9 +40,5 @@
  * Número de requisições a serem geradas
  */
 #define NUM_REQUESTS 10000
-
-#define TRUE 1
-#define FALSE 0
-typedef int bool;
 
 #endif

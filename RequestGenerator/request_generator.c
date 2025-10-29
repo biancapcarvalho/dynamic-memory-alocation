@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include "../config.h"
 #include "request_generator.h"
+#include "../MemoryManager/allocated_processes.h"
 
 /**
  * Gera um tamanho de requisição aleatório em unidades de memória
@@ -17,7 +17,7 @@ int get_request_size() {
 /**
  * Gera um PID aleatório
  */
-int get_pid() {
+int get_random_pid() {
     return (rand() % MAX_PID) ;
 }
 
@@ -32,23 +32,31 @@ Request* generate_requests() {
         exit(1);
     }
 
-    srand(time(NULL));
     int req_type;
+    int pid;
 
     for (int i = 0; i < NUM_REQUESTS; i++)
     {
-        req_type = rand() % MAX_PID; // 0 para alocação, 1 para desalocação
+        req_type = rand() % 2; // 0 para alocação, 1 para desalocação
         
         if (req_type == 0) {
             // Alocação
             requests[i].type = 'A';
-            requests[i].pid = get_pid();
+            requests[i].pid = get_random_pid();
             requests[i].size = get_request_size();
         } else {
             // Desalocação
-            requests[i].type = 'D';
-            requests[i].pid = get_pid();
-            requests[i].size = 0;
+            pid = get_random_allocated_pid();
+            if (pid == -1) {
+                // Nenhum processo alocado -> gerar requisição de alocação
+                requests[i].type = 'A';
+                requests[i].pid = get_random_pid();
+                requests[i].size = get_request_size();
+            } else {
+                requests[i].type = 'D';
+                requests[i].pid = pid;
+                requests[i].size = 0;
+            }
         }
     }
 

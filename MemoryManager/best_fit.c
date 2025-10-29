@@ -38,7 +38,7 @@ int alloc_mem(int PID, int mem_units) {
     printf("\n> Nova requisiçao: alocar %d unidades de memória para o processo %d.\n", mem_units, PID);
 
     // Verificar se ja tem memória alocada para o processo
-    if (is_process_allocated(PID) == TRUE) {
+    if (is_process_allocated(PID) == true) {
         printf("  FALHA AO ALOCAR MEMÓRIA - Já existe memória alocada para o processo PID %d.\n", PID);
         return -1;
     }

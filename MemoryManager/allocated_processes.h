@@ -27,4 +27,9 @@ void remove_allocated_process(int PID);
  */
 bool is_process_allocated(int PID);
 
+/**
+ * Funçao para obter, aleatoriamente, o PID de um processo alocado
+ */
+int get_random_allocated_pid();
+
 #endif
