@@ -60,7 +60,7 @@ Request generate_request(void) {
             alloc_count++;
             add_allocated_process(request.pid);
         }
-    } else if (req_type >= load){
+    } else if (req_type >= load) {
         // Desalocação
         pid = get_random_allocated_pid();
         if (pid == -1) {

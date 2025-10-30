@@ -63,20 +63,27 @@ int dealloc_mem(int PID);
 int frag_count();
 
 /**
+ * Função para calcular a média de fragmentação externa
+ * Retorno:
+ *  - Tamanho médio em páginas de segmentos livres (fragmentação externa)
+ */
+double avg_ext_frag_size();
+
+/**
  * Função para calcular a média de fragmentação interna
  * Retorno:
- *  - Média de fragmentação interna (em KB) entre todos os segmentos alocados que possuem
- *    fragmentação interna
+ *  - Tamanho médio em KB de fragmentação interna
+ * 
  * TRECHO DO LIVRO
  * Um segmento de código, dados, ou pilha escolhido ao acaso não ocupará um número inteiro de
  * páginas. Na média, metade da página final estará vazia. O espaço extra nessa página é des-
  * perdiçado. Esse desperdício é chamado de fragmentação interna.
  */
-int avg_int_frag();
+double avg_int_frag_size();
 
 /**
  * Função para imprimir o estado atual da lista
  */
-void print_memory_list(void);
+void print_memory_list();
 
 #endif

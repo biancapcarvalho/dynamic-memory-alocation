@@ -1,4 +1,4 @@
-# Atividade Prática de Sistemas Operacionais 2020/2 - Gerenciamento de Memória com Paginação
+# Atividade Prática de Sistemas Operacionais 2025/2 - Gerenciamento de Memória com Paginação
 
 ``Discentes: Ana Beatriz Borges (202201604), Bianca Carvalho (202004706), Júlia Moreira (202204837)``
 
@@ -82,7 +82,6 @@ gcc RequestGenerator/main.c RequestGenerator/request_generator.c MemoryManager/a
 
 # Executar a simulação
 ./generate_requests
-
 
 ### SEGUNDO, EXECUTAR OS TRÊS ALGORITMOS DE ALOCAÇÃO PARA CADA CENÁRIO DE CARGA
 

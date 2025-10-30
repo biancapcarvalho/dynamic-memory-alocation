@@ -67,7 +67,7 @@ int alloc_mem(int PID, int mem_units) {
     if (suitable_segment == NULL) {
         // Aqui devo desalocar algum processo ou retornar falha?
         printf("  FALHA AO ALOCAR MEMÓRIA - Sem espaço suficiente.\n");
-        return -1;
+        return -2;
     }
 
     /**
@@ -174,21 +174,39 @@ int frag_count() {
     return frag_count;
 }
 
-int avg_int_frag() {
+double avg_ext_frag_size(void) {
     int frag_count = 0;
-    int frag_sum = 0;
-    int avg_frag = 0;
+    int frag_size_sum = 0;
+    double avg_frag = 0;
+    MemorySegment* current = memory_list_head; 
+
+    while (current != NULL) {
+        if (current->PID == -1) {
+            frag_count++;
+            frag_size_sum += current->size;
+        }
+        current = current->next;
+    }
+
+    avg_frag = (frag_count > 0) ? ((double)frag_size_sum / frag_count) : 0.0;
+    return avg_frag;
+}
+
+double avg_int_frag_size() {
+    int frag_count = 0;
+    int frag_size_sum = 0;
+    double avg_frag = 0;
     MemorySegment* current = memory_list_head;
 
     while (current != NULL) {
         if (current->frag_size > 0) {
             frag_count++;
-            frag_sum += current->frag_size;
+            frag_size_sum += current->frag_size;
         }
         current = current->next;
     }
 
-    avg_frag = (frag_count > 0) ? (frag_sum / frag_count) : 0;
+    avg_frag = (frag_count > 0) ? ((double)frag_size_sum / frag_count) : 0.0;
     return avg_frag;
 }
 
