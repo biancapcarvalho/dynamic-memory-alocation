@@ -32,4 +32,9 @@ bool is_process_allocated(int PID);
  */
 int get_random_allocated_pid();
 
+/**
+ * Libera toda a memória alocada para a lista de processos alocados
+ */
+void free_allocated_processes_list(void);
+
 #endif

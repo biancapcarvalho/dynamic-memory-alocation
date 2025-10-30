@@ -65,3 +65,16 @@ int get_random_allocated_pid() {
 
     return pid;
 }
+
+void free_allocated_processes_list(void) {
+    AllocatedProcess* current = allocated_list_head;
+    AllocatedProcess* next_node;
+
+    while (current != NULL) {
+        next_node = current->next;
+        free(current);
+        current = next_node;
+    }
+
+    allocated_list_head = NULL;
+}

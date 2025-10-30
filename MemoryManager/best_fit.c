@@ -160,20 +160,36 @@ int dealloc_mem(int PID) {
     return -1;
 }
 
-// CORRIGIR - DEVE CONTAR A FRAGMENTAÇÃO EXTERNA OU INTERNA?
 int frag_count() {
     int frag_count = 0;
     MemorySegment* current = memory_list_head;
 
     while (current != NULL) {
-        if (current->frag_size == 1 || current->frag_size == 2) {
+        if (current->PID == -1 && (current->size == 1 || current->size == 2)) {
             frag_count++;
         }
         current = current->next;
     }
 
-    printf("\n> Contagem de fragmentação interna: %d.\n", frag_count);
     return frag_count;
+}
+
+int avg_int_frag() {
+    int frag_count = 0;
+    int frag_sum = 0;
+    int avg_frag = 0;
+    MemorySegment* current = memory_list_head;
+
+    while (current != NULL) {
+        if (current->frag_size > 0) {
+            frag_count++;
+            frag_sum += current->frag_size;
+        }
+        current = current->next;
+    }
+
+    avg_frag = (frag_count > 0) ? (frag_sum / frag_count) : 0;
+    return avg_frag;
 }
 
 void print_memory_list(void) {
@@ -191,4 +207,35 @@ void print_memory_list(void) {
         current = current->next;
     }
     printf("\n\n");
+}
+
+void print_memory_map(void) {
+    printf("\n> Mapa Visual da Memória (%d Páginas Totais)\n", TOTAL_PAGES); //
+
+    MemorySegment* current = memory_list_head;
+    int page_counter = 0;
+    char marker;
+    
+    printf("  ");
+
+    while (current != NULL) {
+        // Define o caractere do segmento
+        if (current->PID == -1) {
+            marker = '_';
+        } else {
+            marker = '#';
+        }
+
+        for (int i = 0; i < current->size; i++) {
+            printf("[%c]", marker);
+            page_counter++;
+            
+            if (page_counter % 32 == 0 && page_counter < TOTAL_PAGES) {
+                printf("\n  ");
+            }
+        }
+        current = current->next;
+    }
+    
+    printf("\n  Legenda: [_] = Livre, [#] = Alocado\n\n");
 }
