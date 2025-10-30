@@ -14,8 +14,6 @@ void add_allocated_process(int PID) {
     new_process->PID = PID;
     new_process->next = allocated_list_head;
     allocated_list_head = new_process;
-
-    printf("  Processo %d adicionado à lista com sucesso.\n", PID);
 }
 
 void remove_allocated_process(int PID) {
@@ -30,23 +28,53 @@ void remove_allocated_process(int PID) {
                 previous->next = current->next;
             }
             free(current);
-            printf("  Processo %d removido da lista com sucesso.\n", PID);
             return;
         }
         previous = current;
         current = current->next;
     }
-
-    printf("  Processo %d não encontrado na lista de processos alocados.\n", PID);
 }
 
 bool is_process_allocated(int PID) {
     AllocatedProcess* current = allocated_list_head;
     while (current != NULL) {
         if (current->PID == PID) {
-            return TRUE;
+            return true;
         }
         current = current->next;
     }
-    return FALSE;
+    return false;
+}
+
+int get_random_allocated_pid() {
+    AllocatedProcess* current = allocated_list_head;
+    int count = 0;
+    int pid = -1;
+
+    if (current == NULL) {
+        return -1; // nenhum processo alocado
+    }
+
+    while (current != NULL) {
+        count++;
+        if (rand() % count == 0) {
+            pid = current->PID;
+        }
+        current = current->next;
+    }
+
+    return pid;
+}
+
+void free_allocated_processes_list(void) {
+    AllocatedProcess* current = allocated_list_head;
+    AllocatedProcess* next_node;
+
+    while (current != NULL) {
+        next_node = current->next;
+        free(current);
+        current = next_node;
+    }
+
+    allocated_list_head = NULL;
 }

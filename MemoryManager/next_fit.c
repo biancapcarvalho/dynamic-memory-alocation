@@ -43,7 +43,7 @@ int alloc_mem(int PID, int mem_units) {
     printf("\n> Nova requisiçao: alocar %d unidades de memória para o processo %d.\n", mem_units, PID);
 
     // Verificar se ja tem memória alocada para o processo
-    if (is_process_allocated(PID) == TRUE) {
+    if (is_process_allocated(PID) == true) {
         printf("  FALHA AO ALOCAR MEMÓRIA - Já existe memória alocada para o processo PID %d.\n", PID);
         return -1;
     }
@@ -89,7 +89,7 @@ int alloc_mem(int PID, int mem_units) {
     if (suitable_segment == NULL) {
         // Aqui devo desalocar algum processo ou retornar falha?
         printf("  FALHA AO ALOCAR MEMÓRIA - Sem espaço suficiente.\n");
-        return -1;
+        return -2;
     }
 
     /**
@@ -119,6 +119,10 @@ int alloc_mem(int PID, int mem_units) {
         suitable_segment->size = pages_needed;
         suitable_segment->frag_size = (pages_needed * PAGE_SIZE) - required_mem_kb;
         suitable_segment->next = new_free_segment;
+
+        if (new_free_segment->next != NULL) {
+            new_free_segment->next->prev = new_free_segment;
+        }
     }
 
     printf("  Memória alocada com sucesso para o processo %d (%d unidades em %d paginas).\n", PID, mem_units, pages_needed);
@@ -153,16 +157,25 @@ int dealloc_mem(int PID) {
             // Verifica se pode fundir com o próximo segmento
             if (current->next != NULL && current->next->PID == -1) {
                 MemorySegment* next_segment = current->next;
+
+                if (next_fit_pointer == next_segment) {
+                    next_fit_pointer = current;
+                }
+
                 current->size += next_segment->size;
                 current->next = next_segment->next;
                 if (next_segment->next != NULL) {
                     next_segment->next->prev = current;
-                }
+                }            
                 free(next_segment);
             }
 
             // Verifica se pode fundir com o segmento anterior
             if (current->prev != NULL && current->prev->PID == -1) {
+                if (next_fit_pointer == current) {
+                    next_fit_pointer = current->prev;
+                }
+
                 MemorySegment* current_segment_to_free = current;
                 current->prev->size += current->size;
                 current->prev->next = current->next;
@@ -184,20 +197,54 @@ int dealloc_mem(int PID) {
     return -1;
 }
 
-// CORRIGIR - DEVE CONTAR A FRAGMENTAÇÃO EXTERNA OU INTERNA?
 int frag_count() {
     int frag_count = 0;
     MemorySegment* current = memory_list_head;
 
     while (current != NULL) {
-        if (current->frag_size == 1 || current->frag_size == 2) {
+        if (current->PID == -1 && (current->size == 1 || current->size == 2)) {
             frag_count++;
         }
         current = current->next;
     }
 
-    printf("\n> Contagem de fragmentação interna: %d.\n", frag_count);
     return frag_count;
+}
+
+double avg_ext_frag_size(void) {
+    int frag_count = 0;
+    int frag_size_sum = 0;
+    double avg_frag = 0;
+    MemorySegment* current = memory_list_head; 
+
+    while (current != NULL) {
+        if (current->PID == -1) {
+            frag_count++;
+            frag_size_sum += current->size;
+        }
+        current = current->next;
+    }
+
+    avg_frag = (frag_count > 0) ? ((double)frag_size_sum / frag_count) : 0.0;
+    return avg_frag;
+}
+
+double avg_int_frag_size() {
+    int frag_count = 0;
+    int frag_size_sum = 0;
+    double avg_frag = 0;
+    MemorySegment* current = memory_list_head;
+
+    while (current != NULL) {
+        if (current->frag_size > 0) {
+            frag_count++;
+            frag_size_sum += current->frag_size;
+        }
+        current = current->next;
+    }
+
+    avg_frag = (frag_count > 0) ? ((double)frag_size_sum / frag_count) : 0.0;
+    return avg_frag;
 }
 
 void print_memory_list(void) {
@@ -215,4 +262,35 @@ void print_memory_list(void) {
         current = current->next;
     }
     printf("\n\n");
+}
+
+void print_memory_map(void) {
+    printf("\n> Mapa Visual da Memória (%d Páginas Totais)\n", TOTAL_PAGES); //
+
+    MemorySegment* current = memory_list_head;
+    int page_counter = 0;
+    char marker;
+    
+    printf("  ");
+
+    while (current != NULL) {
+        // Define o caractere do segmento
+        if (current->PID == -1) {
+            marker = '_';
+        } else {
+            marker = '#';
+        }
+
+        for (int i = 0; i < current->size; i++) {
+            printf("[%c]", marker);
+            page_counter++;
+            
+            if (page_counter % 32 == 0 && page_counter < TOTAL_PAGES) {
+                printf("\n  ");
+            }
+        }
+        current = current->next;
+    }
+    
+    printf("\n  Legenda: [_] = Livre, [#] = Alocado\n\n");
 }

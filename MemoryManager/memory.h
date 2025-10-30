@@ -56,16 +56,34 @@ int dealloc_mem(int PID);
  * Retorno:
  *  - Quantidade de fragmentos externos de tamanho 1 ou 2 unidades
  * 
+ * A fragmentação externa ocorre quando os blocos de memória livre estão espalhados, deixando
+ * lacunas entre os blocos alocados. Mesmo que a soma total da memória livre seja suficiente para
+ * atender a uma requisição de alocação, a falta de blocos livres consecuitivos impede a alocação.
+ */
+int frag_count();
+
+/**
+ * Função para calcular a média de fragmentação externa
+ * Retorno:
+ *  - Tamanho médio em páginas de segmentos livres (fragmentação externa)
+ */
+double avg_ext_frag_size();
+
+/**
+ * Função para calcular a média de fragmentação interna
+ * Retorno:
+ *  - Tamanho médio em KB de fragmentação interna
+ * 
  * TRECHO DO LIVRO
  * Um segmento de código, dados, ou pilha escolhido ao acaso não ocupará um número inteiro de
  * páginas. Na média, metade da página final estará vazia. O espaço extra nessa página é des-
  * perdiçado. Esse desperdício é chamado de fragmentação interna.
  */
-int frag_count();
+double avg_int_frag_size();
 
 /**
  * Função para imprimir o estado atual da lista
  */
-void print_memory_list(void);
+void print_memory_list();
 
 #endif

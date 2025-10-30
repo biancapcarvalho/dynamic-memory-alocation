@@ -1,8 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include "../config.h"
 #include "request_generator.h"
+#include "../MemoryManager/allocated_processes.h"
+
+// para depurar a quantidade de requisiçoes de alocaçao e desalocaçao geradas
+static int alloc_count = 0;
+static int dealloc_count = 0;
+static int invalid_count = 0;
+static int load = 0;
+
+/**
+ * Inicializa o gerador de requisições com um cenário de carga específico
+ */
+void init_request_generator(int load_scenario) {
+    alloc_count = 0;
+    dealloc_count = 0;
+    invalid_count = 0;
+    load = load_scenario;
+}
 
 /**
  * Gera um tamanho de requisição aleatório em unidades de memória
@@ -17,40 +33,56 @@ int get_request_size() {
 /**
  * Gera um PID aleatório
  */
-int get_pid() {
+int get_random_pid() {
     return (rand() % MAX_PID) ;
 }
 
 /**
- * Obs.: nao entendi direito como que a carga influencia na geraçao das requisiçoes
- * Aqui ele só gera 10.000 requisiçoes aleatórias de alocaçao e desalocaçao sem considerar a carga
+ * Gera uma requisição
  */
-Request* generate_requests() {
-    Request* requests = (Request*)malloc(sizeof(Request) * NUM_REQUESTS);
-    if (requests == NULL) {
-        fprintf(stderr, "Erro: Falha ao alocar memória para requisições\n");
-        exit(1);
-    }
+Request generate_request(void) {
+    Request request;
+    int req_type = rand() % 100;
+    int pid;
 
-    srand(time(NULL));
-    int req_type;
+    if (req_type < load) {
+        // Alocação
+        pid = get_random_pid();
 
-    for (int i = 0; i < NUM_REQUESTS; i++)
-    {
-        req_type = rand() % MAX_PID; // 0 para alocação, 1 para desalocação
-        
-        if (req_type == 0) {
-            // Alocação
-            requests[i].type = 'A';
-            requests[i].pid = get_pid();
-            requests[i].size = get_request_size();
+        if (is_process_allocated(pid)) {
+            // processo já alocado, gerar requisição inválida
+            request.type = 'N';
+            invalid_count++;
         } else {
-            // Desalocação
-            requests[i].type = 'D';
-            requests[i].pid = get_pid();
-            requests[i].size = 0;
+            request.type = 'A';
+            request.pid = pid;
+            request.size = get_request_size();
+            alloc_count++;
+            add_allocated_process(request.pid);
+        }
+    } else if (req_type >= load) {
+        // Desalocação
+        pid = get_random_allocated_pid();
+        if (pid == -1) {
+            // nenhum processo alocado, gerar requisição inválida
+            request.type = 'N';
+            invalid_count++;
+        } else {
+            request.type = 'D';
+            request.pid = pid;
+            request.size = 0;
+            dealloc_count++;
+            remove_allocated_process(request.pid);
         }
     }
 
-    return requests;
+    return request;
+}
+
+// Depurar a quantidade de requisiçoes de alocaçao e desalocaçao geradas
+void print_request_summary(void) {
+    printf("\n[Depurador do Gerador de Requisições]\n");
+    printf("  - Total de Requisições de Alocação Geradas: %d\n", alloc_count);
+    printf("  - Total de Requisições de Desalocação Geradas: %d\n\n", dealloc_count);
+    printf("  - Total de Requisições Inválidas Geradas: %d\n\n", invalid_count);
 }
