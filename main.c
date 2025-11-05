@@ -3,18 +3,19 @@
 #include <string.h>
 #include "config.h"
 #include "MemoryManager/memory.h"
-
-void print_memory_list(void);
-void print_memory_map(void);
+#include "ReportManager/report.h"
 
 int main(int argc, char* argv[]) {
-
-    if (argc != 2) {
-        fprintf(stderr, "Erro: ceve ser informado o arquivo de requisições.\n");
-        fprintf(stderr, "Ex: %s carga_alta.txt\n", argv[0]);
+    if (argc < 3) {
+        fprintf(stderr, "Erro: Uso incorreto.\n");
+        fprintf(stderr, "Uso: %s <algoritmo> <arquivo_requisicoes>\n", argv[0]);
+        fprintf(stderr, "Algoritmos disponíveis: first_fit, best_fit, next_fit\n");
+        fprintf(stderr, "Arquivos disponíveis: carga_baixa.txt, carga_media.txt, carga_alta.txt\n");
         return 1;
     }
-    const char* request_file = argv[1];
+
+    const char* algorithm = argv[1];
+    const char* request_file = argv[2];
 
     char full_path[512];
     snprintf(full_path, sizeof(full_path), "RequestGenerator/%s", request_file);
@@ -23,50 +24,52 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Erro: Não foi possível abrir o arquivo '%s'\n", request_file);
         return 1;
     }
-    
-    printf("Iniciando a simulação com o arquivo: %s\n", request_file);
 
-    init_memory();
+    printf("Iniciando a simulação do %s com o arquivo %s\n", algorithm, request_file);
+
+    AllocAlgorithm algorithm_enum;
+
+    if (strcmp(algorithm, "first_fit") == 0) {
+        algorithm_enum = FIRST_FIT;
+    } else if (strcmp(algorithm, "best_fit") == 0) {
+        algorithm_enum = BEST_FIT;
+    } else if (strcmp(algorithm, "next_fit") == 0) {
+        algorithm_enum = NEXT_FIT;
+    }
+
+    init_memory(algorithm_enum);
+    init_csv_logger(algorithm, request_file); // para o relatório
 
     char line[100];
-    char req_type;
     int pid, size;
 
-    long long nodes_traversed_total = 0;
+    SimulationStats stats = {0}; // nodes_traversed_count, failure_count, alloc_count
     int nodes_traversed = 0;
-    int failures = 0;
-    int alloc_requests = 0;
+    int request_count = 0;
 
     while (fgets(line, sizeof(line), file)) {
         if (sscanf(line, "A %d %d", &pid, &size) == 2) {
             nodes_traversed = alloc_mem(pid, size);
-            if (nodes_traversed_total == -2) {
-                failures++;
+            request_count++;
+            if (nodes_traversed == -2) {
+                stats.failure_count++;
             } else {
-                nodes_traversed_total += nodes_traversed;
+                stats.nodes_traversed_count += nodes_traversed;
             }
-            
-            alloc_requests++;
+            stats.alloc_count++;
         } else if (sscanf(line, "D %d", &pid) == 1) {
             dealloc_mem(pid);
+            request_count++;
         }
+
+        log_csv_data(stats, request_count);
     }
 
     fclose(file);
+    close_csv_logger();
     printf("\n... Simulação concluída.\n");
-
-    int avg_nodes_traversed = (alloc_requests > 0) ? (nodes_traversed_total / alloc_requests) : 0;
-    double failure_rate = (alloc_requests > 0) ? ((double)failures / alloc_requests) * 100.0 : 0.0;
-
-    printf("--> Estatísticas finais:");
-    printf("\n  > Fragmentação externa: %d blocos livres de 1 ou 2 páginas", frag_count());
-    printf("\n  > Tamanho médio dos fragmentos externos: %.2f KB", avg_ext_frag_size());
-    printf("\n  > Tamanho médio dos fragmentos internos: %.2f KB", avg_int_frag_size());
-    printf("\n  > Tempo médio (média de nós atravessados até a alocação) %d nós", avg_nodes_traversed);
-    printf("\n  > Percentual de falha por falta de memória contígua: %.2f%%\n", failure_rate);
-
-    // print_memory_list();
-    print_memory_map();
-
+    export_final_statistics(algorithm, request_file, stats, request_count);
+    cleanup_memory();
+    
     return 0;
 }

@@ -7,7 +7,7 @@ static AllocatedProcess* allocated_list_head = NULL;
 void add_allocated_process(int PID) {
     AllocatedProcess* new_process = (AllocatedProcess*)malloc(sizeof(AllocatedProcess));
     if (new_process == NULL) {
-        fprintf(stderr, "  Erro ao adicionar processo á lista de processos alocados\n");
+        fprintf(stderr, "Erro ao adicionar processo á lista de processos alocados\n");
         exit(1);
     }
 

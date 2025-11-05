@@ -1,25 +1,13 @@
-#include "memory.h"
-#include "allocated_processes.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "memory.h"
+#include "allocated_processes.h"
 
-/**
- * TRECHO DO LIVRO
- * Uma pequena variação do first fit é o next fit. Ele funciona da mesma maneira que
- * o first fit, exceto por memorizar a posição que se encontra um espaço livre
- * adequado sempre que o encontra. Da vez seguinte que for chamado para encontrar um
- * espaço livre, ele começa procurando na lista do ponto onde havia parado, em vez
- * de sempre do princípio, como faz o first fit. Simulações realizadas por Bays
- * (1977) mostram que o next fit tem um desempenho ligeiramente pior do que o do
- * first fit.
- */
-
-// início da lista
 static MemorySegment* memory_list_head = NULL;
-// nó onde a próxima busca deve começar
-static MemorySegment* next_fit_pointer = NULL;
+static AllocFunc alloc_func = NULL;
+static DeallocFunc dealloc_func = NULL;
 
-void init_memory(void) {
+void init_memory(AllocAlgorithm algorithm) {
     memory_list_head = (MemorySegment*)malloc(sizeof(MemorySegment));
     if (memory_list_head == NULL) {
         fprintf(stderr, "Erro: Falha ao inicializar a memória\n");
@@ -33,10 +21,24 @@ void init_memory(void) {
     memory_list_head->next = NULL;
     memory_list_head->prev = NULL;
 
+    switch (algorithm) {
+        case FIRST_FIT:
+            alloc_func = &find_first_fit;
+            dealloc_func = &dealloc_common;
+            break;
+        case BEST_FIT:
+            alloc_func = &find_best_fit;
+            dealloc_func = &dealloc_common;
+            break;
+        case NEXT_FIT:
+            alloc_func = &find_next_fit;
+            dealloc_func = &dealloc_next_fit;
+            init_next_fit(memory_list_head);
+            break;
+    }
+
     printf("Memória inicializada.\n");
     print_memory_list();
-
-    next_fit_pointer = memory_list_head;
 }
 
 int alloc_mem(int PID, int mem_units) {
@@ -49,46 +51,14 @@ int alloc_mem(int PID, int mem_units) {
     }
 
     int required_mem_kb = mem_units * MEM_UNIT_SIZE;
-    int pages_needed = (required_mem_kb + PAGE_SIZE - 1) / PAGE_SIZE; // força o arredondamento para cima
-
-    printf("\n  Procurando por %d paginas livres e consecutivas para alocar...\n", pages_needed);
-
+    int pages_needed = (required_mem_kb + PAGE_SIZE - 1) / PAGE_SIZE;
     int nodes_traversed = 0;
-    MemorySegment* suitable_segment = NULL;
-    MemorySegment* current = next_fit_pointer;
 
-    // É uma lista circular. Começa a percorrer no nó após o último alocado,
-    // e vai até encontrar um segmento adequado ou voltar ao início
-    while (current != NULL) {
-        nodes_traversed++;
-        
-        if (current->PID == -1 && current->size >= pages_needed) {
-            suitable_segment = current;
-            break;
-        }
-        
-        current = current->next;
-    }
-
-    if (suitable_segment == NULL)
-    {
-        current = memory_list_head;
-        while (current != next_fit_pointer) {
-            nodes_traversed++;
-            
-            if (current->PID == -1 && current->size >= pages_needed) {
-                suitable_segment = current;
-                break;
-            }
-            
-            current = current->next;
-        }
-    }
-    
+    // os algoritmos First Fit, Next Fit e Best Fit se diferenciam na forma como buscam e escolhem um segmento
+    MemorySegment* suitable_segment = alloc_func(memory_list_head, pages_needed, &nodes_traversed);
 
     if (suitable_segment == NULL) {
-        // Aqui devo desalocar algum processo ou retornar falha?
-        printf("  FALHA AO ALOCAR MEMÓRIA - Sem espaço suficiente.\n");
+        printf("  FALHA AO ALOCAR MEMÓRIA - Sem memória livre contígua suficiente.\n");
         return -2;
     }
 
@@ -96,16 +66,14 @@ int alloc_mem(int PID, int mem_units) {
      * Para alocar a memória devemos:
      *  - Atualizar o segmento encontrado com o PID
      *  - Se o segmento for maior que o requisitado:
-     *    - Redefinir o tamanho do segmento
      *    - Criar um novo segmento livre com o tamanho restante, que será o "next" do alocado
-     *  - Salvar o nó onde parou a busca para a próxima alocação
      */
-    int remainder_size = suitable_segment->size - pages_needed; // tamanho do segmento encontrado - tamanho requisitado
+    int remainder_size = suitable_segment->size - pages_needed;
+    int frag_size_kb = (pages_needed * PAGE_SIZE) - required_mem_kb;
 
-    if (remainder_size == 0)
-    {
+    if (remainder_size == 0) {
         suitable_segment->PID = PID;
-        suitable_segment->frag_size = (pages_needed * PAGE_SIZE) - required_mem_kb;
+        suitable_segment->frag_size = frag_size_kb;
     } else {
         MemorySegment* new_free_segment = (MemorySegment*)malloc(sizeof(MemorySegment));
         new_free_segment->PID = -1;
@@ -117,7 +85,7 @@ int alloc_mem(int PID, int mem_units) {
 
         suitable_segment->PID = PID;
         suitable_segment->size = pages_needed;
-        suitable_segment->frag_size = (pages_needed * PAGE_SIZE) - required_mem_kb;
+        suitable_segment->frag_size = frag_size_kb;
         suitable_segment->next = new_free_segment;
 
         if (new_free_segment->next != NULL) {
@@ -128,10 +96,6 @@ int alloc_mem(int PID, int mem_units) {
     printf("  Memória alocada com sucesso para o processo %d (%d unidades em %d paginas).\n", PID, mem_units, pages_needed);
     add_allocated_process(PID);
 
-    // Se o segmento alocado tiver um próximo, começamos a próxima busca por ele
-    // Se não, voltamos ao início da lista.
-    next_fit_pointer = suitable_segment->next != NULL ? suitable_segment->next : memory_list_head;
-
     return nodes_traversed;
 }
 
@@ -140,51 +104,13 @@ int dealloc_mem(int PID) {
 
     MemorySegment* current = memory_list_head;
 
-    // Percorre a lista para encontrar o segmento alocado ao PID
+    // Percorre a lista para encontrar o segmento
     while (current != NULL) {
         if (current->PID == PID) {
             current->PID = -1;
             current->frag_size = 0;
 
-            /**
-             * Sobre os vizinhos, sao quatro cenários possiveis apos a desalocação:
-             * 1. O segmento anterior e o próximo estão alocados -> não faz nada
-             * 2. O segmento anterior está livre -> funde com o anterior
-             * 3. O próximo segmento está livre -> funde com o próximo
-             * 4. Ambos os segmentos estão livres -> funde com ambos
-             */
-
-            // Verifica se pode fundir com o próximo segmento
-            if (current->next != NULL && current->next->PID == -1) {
-                MemorySegment* next_segment = current->next;
-
-                if (next_fit_pointer == next_segment) {
-                    next_fit_pointer = current;
-                }
-
-                current->size += next_segment->size;
-                current->next = next_segment->next;
-                if (next_segment->next != NULL) {
-                    next_segment->next->prev = current;
-                }            
-                free(next_segment);
-            }
-
-            // Verifica se pode fundir com o segmento anterior
-            if (current->prev != NULL && current->prev->PID == -1) {
-                if (next_fit_pointer == current) {
-                    next_fit_pointer = current->prev;
-                }
-
-                MemorySegment* current_segment_to_free = current;
-                current->prev->size += current->size;
-                current->prev->next = current->next;
-                if (current->next != NULL) {
-                    current->next->prev = current->prev;
-                }
-                current = current->prev;
-                free(current_segment_to_free);
-            }
+            dealloc_func(current, PID);
 
             printf("  Memória desalocada com sucesso para o processo %d.\n", PID);
             remove_allocated_process(PID);
@@ -264,17 +190,18 @@ void print_memory_list(void) {
     printf("\n\n");
 }
 
-void print_memory_map(void) {
-    printf("\n> Mapa Visual da Memória (%d Páginas Totais)\n", TOTAL_PAGES); //
+void print_memory_map(FILE* output_file) {
+    if (output_file == NULL) return;
+
+    fprintf(output_file, "\n> Mapa da Memória\n");
 
     MemorySegment* current = memory_list_head;
     int page_counter = 0;
     char marker;
     
-    printf("  ");
+    fprintf(output_file, "  ");
 
     while (current != NULL) {
-        // Define o caractere do segmento
         if (current->PID == -1) {
             marker = '_';
         } else {
@@ -282,15 +209,25 @@ void print_memory_map(void) {
         }
 
         for (int i = 0; i < current->size; i++) {
-            printf("[%c]", marker);
+            fprintf(output_file, "[%c]", marker);
             page_counter++;
             
             if (page_counter % 32 == 0 && page_counter < TOTAL_PAGES) {
-                printf("\n  ");
+                fprintf(output_file, "\n  ");
             }
         }
         current = current->next;
     }
     
-    printf("\n  Legenda: [_] = Livre, [#] = Alocado\n\n");
+    fprintf(output_file, "\n  Legenda: [_] = Livre, [#] = Alocado\n\n");
+}
+
+void cleanup_memory(void) {
+    MemorySegment* current = memory_list_head;
+    while (current != NULL) {
+        MemorySegment* temp = current;
+        current = current->next;
+        free(temp);
+    }
+    memory_list_head = NULL;
 }
