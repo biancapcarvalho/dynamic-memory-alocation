@@ -60,5 +60,15 @@
     - Inclusão de contadores de requisições inválidas, de alocação e de desalocação
 - (RequestGenerator/main.c) Programa para gerar os arquivos de requisição
 
-### Próximos Passos
-- Fazer o componente de relatório
+## v1.0.0
+- Inclusão de um Makefile para automatizar a compilaçao e execuçao do projeto
+- Limpeza de código
+    - Remoção de comentários nos códigos .c (dos que implementam os .h)
+    - Códigos .h comentados com a explicação das funções
+    - Reestruração do componente de memória para remover a duplicidade de código que existia em first_fit, best_fit, next_fit
+        - (memory.c) Arquivo criado para centralizar as funções do componente de memória (que antes eram funções repetidas)
+        - (alloc_algortithm.c) Arquivo criado para implementar as especificidades dos algoritmos de alocação first_fit, best_fit, next_fit
+- (memory.h/.c) Inclusão de Strategy para uso dos algoritmos de alocação
+- (main.c) Adaptado para a refatoração do código
+- (RequestGenerator/main.c) Processo de criação de arquivos e loop de geração de requisições movido para (request_generator.c)
+- Iplementação do componente de relatório

@@ -30,14 +30,23 @@ O simulador implementa os seguintes componentes:
     - São criados três arquivos de requisições, um para cada cenário de carga (baixa 25%, média 50% e alta 75%)
         - Assim os três algoritmos de alocação recebem a mesma sequência de requisições
 
-- **Gerenciamento de Memória** (`memory.h`)
+- **Gerenciador de Memória** (`memory.h`)
     - A memória é uma lista duplamente encadeada (`MemorySegment`) para facilitar a fusão de segmentos livres adjacentes durante a desalocação
-    - Algoritmos de alocação implementados
-        - First Fit (`first_fit.c`): percorre a lista e aloca o primeiro segmento livre que seja grande o suficiente
-        - Next Fit (`next_fit.c`): percorre a lista a partir do último segmento alocado e aloca o primeiro segmento livre que seja grande o suficiente
-        - Best Fit (`best_fit.c`): percorre toda a lista e aloca o menor segmento livre que seja gande o suficiente
+    - Algoritmos de alocação implementados (`alloc_algorithm.c`)
+        - First Fit: percorre a lista e aloca o primeiro segmento livre que seja grande o suficiente
+        - Next Fit: percorre a lista a partir do último segmento alocado e aloca o primeiro segmento livre que seja grande o suficiente
+        - Best Fit: percorre toda a lista e aloca o menor segmento livre que seja gande o suficiente
     - Controle de Processos (`allocated_processes.h` e `allocated_processes.c`)
         - Lista simplesmente encadeada para rastrear quais PIDs já possuem memória alocada
+
+- **Gerenciados de Relatório**
+    - Concentra as funções para extrair os dados das simulações
+    - Exporta arquivos CSV, um para cada simulação, com os dados de tempo médio, fragmentação externa, e taxa de falha a cada nova requisição
+    - Exporta arquivos TXT com as estatísticas da memória ao final de cada simulação
+
+- **Relatório Final**
+    - O diretório contém os arquivos de requisições, CSV e TXT utilizados para gerar os gráficos e fazer a análise dos algoritmos
+    - O diretório também contém o PDF do relatório
 
 ## Estrutura de Arquivos do Projeto
 
@@ -45,81 +54,24 @@ O simulador implementa os seguintes componentes:
 - **`main.c`**: O programa principal que inicializa a memória, lê o arquivo de requisições e processa cada requisição (alocando ou desalocando) em um loop
 - MemoryManager/
     - **`memory.h`**: Interface do gerenciador de memória
-    - **`first_fit.c`**: Implementação do algoritmo do First Fit
-    - **`next_fit.c`**: Implementação do algoritmo do Next Fit
-    - **`best_fit.c`**: Implementação do algoritmo do Best Fit
+    - **`memory.c`**: Implementação principal do gerenciador (alocação, desalocação, impressão, etc.)
+    - **`alloc_algorithm.c`**: Implementação dos algoritmos First Fit, Next Fit e Best Fit
     - **`allocated_processes.h/.c`**: Implementação da lista de processos alocadosprocessos alocados
 - RequestGenerator/
     - **`request_generator.h/.c`**: Implementação do gerador de requisições
     - **`main.c`**: O programa principal do gerador de requisições, que chama o gerador de requisições e cria os arquivos de requisição
-
-## TODO
-
-### 1. Relatório e Análise
-
-- [ ] **Coleta de Estatísticas**: Implementar o componente de relatório.
-- [ ] **Métricas de Desempenho**: Para cada algoritmo e cada cenário de carga, o simulador deve calcular e registrar:
-    - O tamanho médio dos fragmentos externos.
-    - O tempo médio de alocação (medido pelo número de nós atravessados na lista ligada).
-    - O percentual de vezes que uma requisição de alocação falhou por falta de memória contígua.
-- [ ] **Salvar Resultados**: Os valores estatísticos devem ser guardados em arquivos (ex: .csv ou .txt).
-- [ ] **Análise Final**: Usar os dados salvos para plotar gráficos (Excel, gnuplot, etc.) e escrever as considerações finais sobre o desempenho comparativo dos algoritmos avaliados.
-
-## Dúvidas
-- Confirmar se frag_count deve ser de fragmentação interna ou externa
-
-## Melhorias
-
-- Implementar atomicidade nas operações de alocação e desalocação de memória, para que não haja inconsistência entre as listas de memória e de processos alocados
+    - Os arquivos com as requisições são salvos aqui
+- ReportManager/
+    - **`report.h/.c`**: Implementação do componente de relatório
+    - Os arquivos com os dados das simulação são salvos aqui
 
 ## Como Compilar e Executar
 
+O projeto utiliza um `Makefile` para automatizar o processo de compilação, execução e limpeza. Os principais comandos, a serem executados no terminal a partir da raiz do projeto, são:
+
 ```bash
-### PRIMEIRO GERAR OS ARQUIVOS DE REQUISIÇÃO -> gera os arquivos carga_baixa.txt, carga_media.txt e carga_alta.txt
+# Compila tudo e executa o processo completo - gera os arquivos de carga e roda as 9 simulações (3 algoritmos x 3 cenários de carga)
+make run_all
 
-# Compilar o programa
-gcc RequestGenerator/main.c RequestGenerator/request_generator.c MemoryManager/allocated_processes.c -o generate_requests
-
-# Executar a simulação
-./generate_requests
-
-### SEGUNDO, EXECUTAR OS TRÊS ALGORITMOS DE ALOCAÇÃO PARA CADA CENÁRIO DE CARGA
-
-## FIRST FIT
-# Compilar o programa
-gcc main.c MemoryManager/allocated_processes.c MemoryManager/first_fit.c RequestGenerator/request_generator.c -o first_fit
-
-# Executar a simulação com carga baixa
-./first_fit carga_baixa.txt
-
-# Executar a simulação com carga média
-./first_fit carga_media.txt
-
-# Executar a simulação com carga alta
-./first_fit carga_alta.txt
-
-## NEXT FIT
-# Compilar o programa
-gcc main.c MemoryManager/allocated_processes.c MemoryManager/next_fit.c RequestGenerator/request_generator.c -o next_fit
-
-# Executar a simulação com carga baixa
-./next_fit carga_baixa.txt
-
-# Executar a simulação com carga média
-./next_fit carga_media.txt
-
-# Executar a simulação com carga alta
-./next_fit carga_alta.txt
-
-## BEST FIT
-# Compilar o programa
-gcc main.c MemoryManager/allocated_processes.c MemoryManager/best_fit.c RequestGenerator/request_generator.c -o best_fit
-
-# Executar a simulação com carga baixa
-./best_fit carga_baixa.txt
-
-# Executar a simulação com carga média
-./best_fit carga_media.txt
-
-# Executar a simulação com carga alta
-./best_fit carga_alta.txt
+# Limpa todos os arquivos gerados (executáveis, .o, arquivos de carga, etc.)
+make clean

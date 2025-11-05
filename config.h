@@ -39,6 +39,6 @@
 /**
  * Número de requisições a serem geradas
  */
-#define NUM_REQUESTS 1000
+#define NUM_REQUESTS 3000
 
 #endif

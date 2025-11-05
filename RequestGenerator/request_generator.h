@@ -3,7 +3,9 @@
 
 #include "../config.h"
 
-// Estrutura da requisição
+/**
+ * Estrutura que representa uma requisição de memória
+ */
 typedef struct {
     char type;  // 'A' para alocar, 'D' para desalocar, 'N' para inválida
     int pid;    // PID do processo
@@ -11,19 +13,38 @@ typedef struct {
 } Request;
 
 /**
- * Inicializa o gerador de requisições com um cenário de carga específico
+ * Função para gerar um tamanho de requisição aleatório em unidades de memória
+ * Retorno:
+ *  - Tamanho da requisição em unidades de memória
  */
-void init_request_generator(int load_scenario);
+int get_request_size();
 
 /**
- * Gera uma requisição aleatória
+ * Função para gerar um PID aleatório entre 0 e 9999
  * Retorno:
- * - Request: estrutura contendo os detalhes da requisição gerada
- *   - type: 'A' (alocar), 'D' (desalocar), 'N' (inválida)
+ *  - PID gerado
  */
-Request generate_request(void);
+int get_random_pid();
 
-// para depurar qual foi a quantidade de requisiçoes de alocaçao e desalocaçao geradas
-void print_request_summary(void);
+/**
+ * Função para gerar uma requisição de memória
+ * Parametros:
+ *  - load_scenario: Percentual de requisições de alocação (25, 50 ou 75%)
+ * Retorno:
+ *  - Requisição gerada
+ */
+Request generate_request(int load_scenario);
+
+/**
+ * Função para inicializar o arquivo de requisições
+ * Parametros:
+ *  - path: Caminho do arquivo onde as requisições serão salvas
+ */
+FILE* init_request_file(const char* path);
+
+/**
+ * Função para gerar todas as requisições de memória com base na carga especificada e salvar em um arquivo
+ */
+void generation_loop(FILE *file, int load);
 
 #endif
