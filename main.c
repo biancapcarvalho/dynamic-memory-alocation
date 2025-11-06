@@ -24,20 +24,10 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Erro: Não foi possível abrir o arquivo '%s'\n", request_file);
         return 1;
     }
-
+    
     printf("Iniciando a simulação do %s com o arquivo %s\n", algorithm, request_file);
 
-    AllocAlgorithm algorithm_enum;
-
-    if (strcmp(algorithm, "first_fit") == 0) {
-        algorithm_enum = FIRST_FIT;
-    } else if (strcmp(algorithm, "best_fit") == 0) {
-        algorithm_enum = BEST_FIT;
-    } else if (strcmp(algorithm, "next_fit") == 0) {
-        algorithm_enum = NEXT_FIT;
-    }
-
-    init_memory(algorithm_enum);
+    init_memory();
     init_csv_logger(algorithm, request_file); // para o relatório
 
     char line[100];
@@ -61,7 +51,6 @@ int main(int argc, char* argv[]) {
             dealloc_mem(pid);
             request_count++;
         }
-
         log_csv_data(stats, request_count);
     }
 
@@ -70,6 +59,6 @@ int main(int argc, char* argv[]) {
     printf("\n... Simulação concluída.\n");
     export_final_statistics(algorithm, request_file, stats, request_count);
     cleanup_memory();
-    
+
     return 0;
 }

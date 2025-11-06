@@ -31,26 +31,11 @@ typedef struct MemorySegment {
     struct MemorySegment* next;     // ponteiro para o próximo segmento
 } MemorySegment;
 
-
-/**
- * Declarações para usar o padrão Strategy e reduzir a quantidade de códigos repetidos
- * antes era um arquivo para cada algoritmo de alocação, sendo que frag_cout() era igual
- * em todos, e alloc_mem() e delloc_mem() tinha muitas partes iguais
- */
-typedef enum {
-    FIRST_FIT,
-    BEST_FIT,
-    NEXT_FIT
-} AllocAlgorithm;
-
-typedef MemorySegment* (*AllocFunc)(MemorySegment* head, int pages_needed, int* nodes_traversed);
-typedef int (*DeallocFunc)(MemorySegment* current, int PID);
-
 /**
  * Função para inicializar a memória
  * - Cria o primeiro segmento livre que representa toda a memória disponível (tamanho de 256 páginas)
  */
-void init_memory(AllocAlgorithm strategy);
+void init_memory();
 
 /**
  * Função para alocar um segmento de memória
@@ -109,7 +94,7 @@ double avg_int_frag_size();
  * Função para imprimir o estado atual da lista
  * Lista todos os segmentos, indicando se estão livres ou alocados, seus tamanhos e fragmentação interna
  */
-void print_memory_list();
+void print_memory_list(FILE* output_file);
 
 /**
  * Função para gravar o mapa da memória no arquivo de estatísticas gerais
@@ -118,13 +103,5 @@ void print_memory_list();
  * Obs.: O mapa da memória representa visualmente os segmentos alocados e livres
  */
 void print_memory_map(FILE* output_file);
-
-// Demais declarações para o uso de Strategy
-MemorySegment* find_first_fit(MemorySegment* head, int pages_needed, int* nodes_traversed);
-MemorySegment* find_best_fit(MemorySegment* head, int pages_needed, int* nodes_traversed);
-MemorySegment* find_next_fit(MemorySegment* head, int pages_needed, int* nodes_traversed);
-void init_next_fit(MemorySegment* head);
-void dealloc_common(MemorySegment* current, int PID); // para o first fit e o best fit
-void dealloc_next_fit(MemorySegment* current, int PID);
 
 #endif

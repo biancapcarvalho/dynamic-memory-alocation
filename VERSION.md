@@ -72,3 +72,6 @@
 - (main.c) Adaptado para a refatoração do código
 - (RequestGenerator/main.c) Processo de criação de arquivos e loop de geração de requisições movido para (request_generator.c)
 - Iplementação do componente de relatório
+
+## v2.0.0
+- Remoção do strategy -> usar componentes separados, mesmo que repetidos
