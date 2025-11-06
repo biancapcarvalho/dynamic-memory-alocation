@@ -30,16 +30,16 @@ O simulador implementa os seguintes componentes:
     - São criados três arquivos de requisições, um para cada cenário de carga (baixa 25%, média 50% e alta 75%)
         - Assim os três algoritmos de alocação recebem a mesma sequência de requisições
 
-- **Gerenciador de Memória** (`memory.h`)
+- **Gerenciamento de Memória** (`memory.h`)
     - A memória é uma lista duplamente encadeada (`MemorySegment`) para facilitar a fusão de segmentos livres adjacentes durante a desalocação
-    - Algoritmos de alocação implementados (`alloc_algorithm.c`)
-        - First Fit: percorre a lista e aloca o primeiro segmento livre que seja grande o suficiente
-        - Next Fit: percorre a lista a partir do último segmento alocado e aloca o primeiro segmento livre que seja grande o suficiente
-        - Best Fit: percorre toda a lista e aloca o menor segmento livre que seja gande o suficiente
+    - Algoritmos de alocação implementados
+        - First Fit (`first_fit.c`): percorre a lista e aloca o primeiro segmento livre que seja grande o suficiente
+        - Next Fit (`next_fit.c`): percorre a lista a partir do último segmento alocado e aloca o primeiro segmento livre que seja grande o suficiente
+        - Best Fit (`best_fit.c`): percorre toda a lista e aloca o menor segmento livre que seja gande o suficiente
     - Controle de Processos (`allocated_processes.h` e `allocated_processes.c`)
         - Lista simplesmente encadeada para rastrear quais PIDs já possuem memória alocada
 
-- **Gerenciados de Relatório**
+- **Gerenciador de Relatório**
     - Concentra as funções para extrair os dados das simulações
     - Exporta arquivos CSV, um para cada simulação, com os dados de tempo médio, fragmentação externa, e taxa de falha a cada nova requisição
     - Exporta arquivos TXT com as estatísticas da memória ao final de cada simulação
@@ -54,8 +54,9 @@ O simulador implementa os seguintes componentes:
 - **`main.c`**: O programa principal que inicializa a memória, lê o arquivo de requisições e processa cada requisição (alocando ou desalocando) em um loop
 - MemoryManager/
     - **`memory.h`**: Interface do gerenciador de memória
-    - **`memory.c`**: Implementação principal do gerenciador (alocação, desalocação, impressão, etc.)
-    - **`alloc_algorithm.c`**: Implementação dos algoritmos First Fit, Next Fit e Best Fit
+    - **`first_fit.c`**: Implementação do algoritmo do First Fit
+    - **`next_fit.c`**: Implementação do algoritmo do Next Fit
+    - **`best_fit.c`**: Implementação do algoritmo do Best Fit
     - **`allocated_processes.h/.c`**: Implementação da lista de processos alocadosprocessos alocados
 - RequestGenerator/
     - **`request_generator.h/.c`**: Implementação do gerador de requisições

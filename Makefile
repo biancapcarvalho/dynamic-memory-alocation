@@ -10,20 +10,25 @@ BEST_FIT_CSV = ReportManager/best_fit_carga_baixa.csv ReportManager/best_fit_car
 
 # Arquivos .o
 ALLOCATED_PROCESSES = MemoryManager/allocated_processes.o
-MEMORY = MemoryManager/memory.o MemoryManager/alloc_algorithm.o
 REPORTS = ReportManager/report.o
 REQUEST_GENERATOR = RequestGenerator/main.o RequestGenerator/request_generator.o
 
 # `make all` compila todos os 4 executáveis
-all: gerar_reqs sim
+all: gerar_reqs sim_first_fit sim_next_fit sim_best_fit
 
 gerar_reqs: $(REQUEST_GENERATOR) $(ALLOCATED_PROCESSES)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-sim: main.o $(ALLOCATED_PROCESSES) $(MEMORY) $(REPORTS)
+sim_first_fit: main.o $(ALLOCATED_PROCESSES) $(REPORTS) MemoryManager/first_fit.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-run_all: generate_requests run_sim
+sim_next_fit: main.o $(ALLOCATED_PROCESSES) $(REPORTS) MemoryManager/next_fit.o
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+sim_best_fit: main.o $(ALLOCATED_PROCESSES) $(REPORTS) MemoryManager/best_fit.o
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+run_all: generate_requests run_sims
 	@echo "--- Processo completo finalizado. ---"
 
 generate_requests: $(REQUEST_FILES)
@@ -33,19 +38,19 @@ $(REQUEST_FILES): gerar_reqs
 	@echo "--- Executando gerador de requisições... ---"
 	@./gerar_reqs
 
-run_sim: all generate_requests
+run_sims: all generate_requests
 	@echo "--- Executando 9 simulações (3 algoritmos x 3 cargas) ---"
-	@./sim first_fit carga_baixa.txt
-	@./sim first_fit carga_media.txt
-	@./sim first_fit carga_alta.txt
+	@./sim_first_fit first_fit carga_baixa.txt
+	@./sim_first_fit first_fit carga_media.txt
+	@./sim_first_fit first_fit carga_alta.txt
 	
-	@./sim best_fit carga_baixa.txt
-	@./sim best_fit carga_media.txt
-	@./sim best_fit carga_alta.txt
+	@./sim_best_fit best_fit carga_baixa.txt
+	@./sim_best_fit best_fit carga_media.txt
+	@./sim_best_fit best_fit carga_alta.txt
 	
-	@./sim next_fit carga_baixa.txt
-	@./sim next_fit carga_media.txt
-	@./sim next_fit carga_alta.txt
+	@./sim_next_fit next_fit carga_baixa.txt
+	@./sim_next_fit next_fit carga_media.txt
+	@./sim_next_fit next_fit carga_alta.txt
 	@echo "--- Simulações concluídas. Arquivos de estatísticas gerados. ---"
 
 main.o: main.c
@@ -63,12 +68,8 @@ ReportManager/%.o: ReportManager/%.c
 .PHONY: all clean run_sims generate_requests run_all
 clean:
 	@echo "--- Limpando arquivos gerados... ---"
-	# Remove .o de todas as pastas
 	rm -f *.o MemoryManager/*.o RequestGenerator/*.o ReportManager/*.o
-	# Remove os executáveis
-	rm -f sim gerar_reqs
-	# Remove os arquivos de carga gerados
+	rm -f sim_next_fit sim_best_fit sim_first_fit gerar_reqs
 	rm -f $(REQUEST_FILES)
-	# Remove os arquivos de relatório gerados
 	rm -f $(REPORT_FILES) $(FIRST_FIT_CSV) $(NEXT_FIT_CSV) $(BEST_FIT_CSV)
 	@echo "--- Limpeza concluída. ---"
